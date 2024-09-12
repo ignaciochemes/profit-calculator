@@ -29,7 +29,7 @@ function Register() {
         }
 
         try {
-            const response = await fetch('http://localhost:33000/api/v1/carta-online/auth/register', {
+            const response = await fetch('http://localhost:33000/api/v1/carta-online/user', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
