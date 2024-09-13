@@ -18,207 +18,151 @@ export class ProductService {
         private readonly _userDao: UserDao
     ) { }
 
-    /**
-    * Crea un nuevo producto.
-    * @param {CreateProductRequest} data - Datos del producto a crear.
-    * @returns {Promise<SuccessfulResponse>}
-    * @throws {HttpCustomException} - Si ocurre un error durante la creación del producto.
-    */
     async create(data: CreateProductRequest, userUuid: string): Promise<SuccessfulResponse> {
-        if (!data) {
-            throw new HttpCustomException('Data is required', StatusCodeEnums.DATA_REQUIRED);
-        }
-
-        if (!data.name) {
-            throw new HttpCustomException('Name is required', StatusCodeEnums.NAME_REQUIRED);
-        }
-
-        if (!userUuid) {
-            throw new HttpCustomException('User UUID is required', StatusCodeEnums.UUID_REQUIRED);
-        }
+        this.validateCreateData(data, userUuid);
 
         try {
-            const findUser: User = await this._userDao.findByUuid(userUuid).catch(error => {
-                if (error instanceof Error) {
-                    throw new HttpCustomException(`Error finding user: ${error.message}`, StatusCodeEnums.USER_NOT_FOUND);
-                } else {
-                    throw new HttpCustomException('Error finding user', StatusCodeEnums.USER_NOT_FOUND);
-                }
-            })
+            const user = await this.findUserByUuid(userUuid);
+            await this.checkProductExists(data.name, user.id);
 
-            if (!findUser) {
-                throw new HttpCustomException('User not found', StatusCodeEnums.USER_NOT_FOUND);
-            }
+            const newProduct = this.createProductEntity(data, user);
+            await this.saveProduct(newProduct);
 
-            const findProduct: Product = await this._productDao.findOneByName(data.name, findUser.id).catch(error => {
-                if (error instanceof Error) {
-                    throw new HttpCustomException(`Error finding product: ${error.message}`, StatusCodeEnums.PRODUCT_NOT_FOUND);
-                } else {
-                    throw new HttpCustomException('Error finding product', StatusCodeEnums.PRODUCT_NOT_FOUND);
-                }
-            })
-
-            if (findProduct) {
-                throw new HttpCustomException('Product already exists', StatusCodeEnums.PRODUCT_EXISTS);
-            }
-
-            const newProduct: Product = new Product();
-            newProduct.setUuid(uuidv4());
-            newProduct.setName(data.name);
-            newProduct.setIsActive(true);
-            newProduct.setIsDelete(false);
-            newProduct.setCost(data.cost);
-            newProduct.setCostUsd(data.costUsd);
-            newProduct.setSellingPrice(data.sellingPrice);
-            newProduct.setSellingPriceUsd(data.sellingPriceUsd);
-            newProduct.setUser(findUser);
-
-            await this._productDao.save(newProduct).catch(error => {
-                if (error instanceof Error) {
-                    throw new HttpCustomException(`Error creating product variant: ${error.message}`, StatusCodeEnums.PRODUCT_CREATION_ERROR);
-                } else {
-                    throw new HttpCustomException('Error creating product variant', StatusCodeEnums.PRODUCT_CREATION_ERROR);
-                }
-            });
-
-            return new SuccessfulResponse('Product created successfully');
+            return new SuccessfulResponse('Producto creado exitosamente');
         } catch (error) {
-            if (error instanceof HttpCustomException) {
-                throw error;
-            } else {
-                throw new HttpCustomException('Error creating product', StatusCodeEnums.PRODUCT_CREATION_ERROR);
-            }
+            this.handleCreateError(error);
         }
     }
 
-    /**
-    * Busca un producto por su UUID.
-    * @param {string} uuid - UUID del producto a buscar.
-    * @returns {Promise<FindOneByUuidResponse>}
-    * @throws Error - Si el producto no se encuentra.
-    */
     async findOneByUuid(uuid: string): Promise<FindOneByUuidResponse> {
+        this.validateUuid(uuid);
+
         try {
-            if (!uuid) {
-                throw new HttpCustomException('UUID is required.', StatusCodeEnums.UUID_REQUIRED);
-            }
-
-            const product: Product | undefined = await this._productDao.findOneByUuid(uuid);
-
-            if (!product) {
-                throw new HttpCustomException('Product not found', StatusCodeEnums.PRODUCT_NOT_FOUND);
-            }
-
+            const product = await this.findProductByUuid(uuid);
             return new FindOneByUuidResponse(product);
         } catch (error) {
-            if (error instanceof Error) {
-                throw new HttpCustomException(`Error finding product by UUID: ${error.message}`, StatusCodeEnums.PRODUCT_FIND_ERROR);
-            } else {
-                throw new HttpCustomException('Error finding product by UUID', StatusCodeEnums.PRODUCT_FIND_ERROR);
-            }
+            this.handleFindError(error);
         }
     }
 
     async findAll(userUuid: string): Promise<FindAllResponse[]> {
-        const findUser: User = await this._userDao.findByUuid(userUuid).catch(error => {
-            if (error instanceof Error) {
-                throw new HttpCustomException(`Error finding user: ${error.message}`, StatusCodeEnums.USER_NOT_FOUND);
-            } else {
-                throw new HttpCustomException('Error finding user', StatusCodeEnums.USER_NOT_FOUND);
-            }
-        })
-
-        if (!findUser) {
-            throw new HttpCustomException('User not found', StatusCodeEnums.USER_NOT_FOUND);
-        }
+        const user = await this.findUserByUuid(userUuid);
 
         try {
-            const products: Product[] = await this._productDao.findAll(findUser.id);
+            const products = await this._productDao.findAll(user.id);
             return products.map(product => new FindAllResponse(product));
         } catch (error) {
-            if (error instanceof Error) {
-                throw new HttpCustomException(`Error finding products: ${error.message}`, StatusCodeEnums.PRODUCT_FIND_ERROR);
-            } else {
-                throw new HttpCustomException('Error finding products', StatusCodeEnums.PRODUCT_FIND_ERROR);
-            }
+            this.handleFindError(error);
         }
     }
 
     async update(data: CreateProductRequest, uuid: string): Promise<SuccessfulResponse> {
+        this.validateUpdateData(data, uuid);
+
         try {
-            if (!data.name) {
-                throw new HttpCustomException('Name is required', StatusCodeEnums.NAME_REQUIRED);
-            }
+            const product = await this.findProductByUuid(uuid);
+            this.updateProductEntity(product, data);
+            await this.saveProduct(product);
 
-            const findProduct: Product = await this._productDao.findOneByUuid(uuid).catch(error => {
-                if (error instanceof Error) {
-                    throw new HttpCustomException(`Error finding product: ${error.message}`, StatusCodeEnums.PRODUCT_NOT_FOUND);
-                } else {
-                    throw new HttpCustomException('Error finding product', StatusCodeEnums.PRODUCT_NOT_FOUND);
-                }
-            })
-
-            if (!findProduct) {
-                throw new HttpCustomException('Product not found', StatusCodeEnums.PRODUCT_NOT_FOUND);
-            }
-
-            findProduct.setName(data.name);
-            findProduct.setCost(data.cost);
-            findProduct.setCostUsd(data.costUsd);
-            findProduct.setSellingPrice(data.sellingPrice);
-            findProduct.setSellingPriceUsd(data.sellingPriceUsd);
-
-            await this._productDao.save(findProduct).catch(error => {
-                if (error instanceof Error) {
-                    throw new HttpCustomException(`Error updating product: ${error.message}`, StatusCodeEnums.PRODUCT_UPDATE_ERROR);
-                } else {
-                    throw new HttpCustomException('Error updating product', StatusCodeEnums.PRODUCT_UPDATE_ERROR);
-                }
-            });
-
-            return new SuccessfulResponse('Product updated successfully');
+            return new SuccessfulResponse('Producto actualizado exitosamente');
         } catch (error) {
-            if (error instanceof HttpCustomException) {
-                throw error;
-            } else {
-                throw new HttpCustomException('Error updating product', StatusCodeEnums.PRODUCT_UPDATE_ERROR);
-            }
+            this.handleUpdateError(error);
         }
     }
 
     async delete(uuid: string): Promise<SuccessfulResponse> {
+        this.validateUuid(uuid);
+
         try {
-            if (!uuid) {
-                throw new HttpCustomException('UUID is required.', StatusCodeEnums.UUID_REQUIRED);
-            }
+            const product = await this.findProductByUuid(uuid);
+            await this._productDao.remove(product);
 
-            const findProduct: Product = await this._productDao.findOneByUuid(uuid).catch(error => {
-                if (error instanceof Error) {
-                    throw new HttpCustomException(`Error finding product: ${error.message}`, StatusCodeEnums.PRODUCT_NOT_FOUND);
-                } else {
-                    throw new HttpCustomException('Error finding product', StatusCodeEnums.PRODUCT_NOT_FOUND);
-                }
-            })
-
-            if (!findProduct) {
-                throw new HttpCustomException('Product not found', StatusCodeEnums.PRODUCT_NOT_FOUND);
-            }
-
-            await this._productDao.remove(findProduct).catch(error => {
-                if (error instanceof Error) {
-                    throw new HttpCustomException(`Error deleting product: ${error.message}`, StatusCodeEnums.PRODUCT_DELETE_ERROR);
-                } else {
-                    throw new HttpCustomException('Error deleting product', StatusCodeEnums.PRODUCT_DELETE_ERROR);
-                }
-            });
-
-            return new SuccessfulResponse('Product deleted successfully');
+            return new SuccessfulResponse('Producto eliminado exitosamente');
         } catch (error) {
-            if (error instanceof HttpCustomException) {
-                throw error;
-            } else {
-                throw new HttpCustomException('Error deleting product', StatusCodeEnums.PRODUCT_DELETE_ERROR);
-            }
+            this.handleDeleteError(error);
         }
+    }
+
+    // Métodos privados de validación
+    private validateCreateData(data: CreateProductRequest, userUuid: string): void {
+        if (!data) throw new HttpCustomException('Se requieren datos', StatusCodeEnums.DATA_REQUIRED);
+        if (!data.name) throw new HttpCustomException('El nombre es requerido', StatusCodeEnums.NAME_REQUIRED);
+        if (!userUuid) throw new HttpCustomException('Se requiere UUID de usuario', StatusCodeEnums.UUID_REQUIRED);
+    }
+
+    private validateUpdateData(data: CreateProductRequest, uuid: string): void {
+        if (!data.name) throw new HttpCustomException('El nombre es requerido', StatusCodeEnums.NAME_REQUIRED);
+        this.validateUuid(uuid);
+    }
+
+    private validateUuid(uuid: string): void {
+        if (!uuid) throw new HttpCustomException('Se requiere UUID', StatusCodeEnums.UUID_REQUIRED);
+    }
+
+    // Métodos privados de búsqueda
+    private async findUserByUuid(userUuid: string): Promise<User> {
+        const user = await this._userDao.findByUuid(userUuid);
+        if (!user) throw new HttpCustomException('Usuario no encontrado', StatusCodeEnums.USER_NOT_FOUND);
+        return user;
+    }
+
+    private async findProductByUuid(uuid: string): Promise<Product> {
+        const product = await this._productDao.findOneByUuid(uuid);
+        if (!product) throw new HttpCustomException('Producto no encontrado', StatusCodeEnums.PRODUCT_NOT_FOUND);
+        return product;
+    }
+
+    private async checkProductExists(name: string, userId: number): Promise<void> {
+        const existingProduct = await this._productDao.findOneByName(name, userId);
+        if (existingProduct) throw new HttpCustomException('El producto ya existe', StatusCodeEnums.PRODUCT_EXISTS);
+    }
+
+    // Métodos privados de creación y actualización de entidades
+    private createProductEntity(data: CreateProductRequest, user: User): Product {
+        const newProduct = new Product();
+        newProduct.setUuid(uuidv4());
+        this.updateProductEntity(newProduct, data);
+        newProduct.setIsActive(true);
+        newProduct.setIsDelete(false);
+        newProduct.setUser(user);
+        return newProduct;
+    }
+
+    private updateProductEntity(product: Product, data: CreateProductRequest): void {
+        product.setName(data.name);
+        product.setCost(data.cost);
+        product.setCostUsd(data.costUsd);
+        product.setSellingPrice(data.sellingPrice);
+        product.setSellingPriceUsd(data.sellingPriceUsd);
+    }
+
+    // Método privado de guardado
+    private async saveProduct(product: Product): Promise<void> {
+        try {
+            await this._productDao.save(product);
+        } catch (error) {
+            throw new HttpCustomException('Error al guardar el producto', StatusCodeEnums.PRODUCT_CREATION_ERROR);
+        }
+    }
+
+    // Métodos privados de manejo de errores
+    private handleCreateError(error: unknown): never {
+        if (error instanceof HttpCustomException) throw error;
+        throw new HttpCustomException('Error al crear el producto', StatusCodeEnums.PRODUCT_CREATION_ERROR);
+    }
+
+    private handleFindError(error: unknown): never {
+        if (error instanceof HttpCustomException) throw error;
+        throw new HttpCustomException('Error al buscar el producto', StatusCodeEnums.PRODUCT_FIND_ERROR);
+    }
+
+    private handleUpdateError(error: unknown): never {
+        if (error instanceof HttpCustomException) throw error;
+        throw new HttpCustomException('Error al actualizar el producto', StatusCodeEnums.PRODUCT_UPDATE_ERROR);
+    }
+
+    private handleDeleteError(error: unknown): never {
+        if (error instanceof HttpCustomException) throw error;
+        throw new HttpCustomException('Error al eliminar el producto', StatusCodeEnums.PRODUCT_DELETE_ERROR);
     }
 }

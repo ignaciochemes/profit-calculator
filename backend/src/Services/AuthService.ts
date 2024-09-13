@@ -6,6 +6,7 @@ import UtilsFunctions from "src/Helpers/Utils/UtilsFunctions";
 import HttpCustomException from "src/Exceptions/HttpCustomException";
 import { StatusCodeEnums } from "src/Enums/StatusCodeEnums";
 import LoginResponse from "src/Models/Response/AuthController/LoginResponse";
+import { User } from "src/Models/Entities/User/UserEntity";
 
 @Injectable()
 export class AuthService {
@@ -15,45 +16,70 @@ export class AuthService {
     ) { }
 
     async login(data: LoginRequest): Promise<LoginResponse> {
+        this.validateLoginData(data);
+
+        const user = await this.findUserByEmail(data.email);
+        await this.validatePassword(data.password, user.getPassword());
+
+        return await this.generateAndSaveTokens(user);
+    }
+
+    private validateLoginData(data: LoginRequest): void {
         if (!data) {
-            throw new HttpCustomException('Data is required', StatusCodeEnums.INVALID_CREDENTIALS);
-        }
-
-        const findUser = await this._userDao.findByEmail(data.email).catch(error => {
-            if (error instanceof Error) {
-                throw new HttpCustomException(`Error finding user: ${error.message}`, StatusCodeEnums.INVALID_CREDENTIALS);
-            } else {
-                throw new HttpCustomException('Error finding user', StatusCodeEnums.INVALID_CREDENTIALS);
-            }
-        });
-
-        if (!findUser) {
-            throw new HttpCustomException('User not found', StatusCodeEnums.INVALID_CREDENTIALS);
-        }
-
-        if (!(await UtilsFunctions.getEncryptCompare(data.password, findUser.getPassword()))) {
-            throw new HttpCustomException('The username or password is invalid', StatusCodeEnums.INVALID_CREDENTIALS);
-        }
-
-        try {
-            const accessToken = await this._jwtSecurityService.generateAccessToken(findUser.getUuid(), findUser.id);
-            const refreshToken = await this._jwtSecurityService.generateRefreshToken(findUser.getUuid(), findUser.id);
-            findUser.setRefreshToken(refreshToken);
-            await this._userDao.save(findUser).catch(error => {
-                if (error instanceof Error) {
-                    throw new HttpCustomException(`Error saving user: ${error.message}`, StatusCodeEnums.INVALID_CREDENTIALS);
-                } else {
-                    throw new HttpCustomException('Error saving user', StatusCodeEnums.INVALID_CREDENTIALS);
-                }
-            });
-            return new LoginResponse(accessToken, refreshToken);
-        } catch (error) {
-            if (error instanceof HttpCustomException) {
-                throw error;
-            } else {
-                throw new HttpCustomException(`The username or password is invalid`, StatusCodeEnums.INVALID_CREDENTIALS);
-            }
+            throw new HttpCustomException('Se requieren datos de inicio de sesión', StatusCodeEnums.INVALID_CREDENTIALS);
         }
     }
 
+    private async findUserByEmail(email: string): Promise<User> {
+        try {
+            const user = await this._userDao.findByEmail(email);
+            if (!user) {
+                throw new HttpCustomException('Usuario no encontrado', StatusCodeEnums.INVALID_CREDENTIALS);
+            }
+            return user;
+        } catch (error) {
+            this.handleDatabaseError(error, 'Error al buscar usuario');
+        }
+    }
+
+    private async validatePassword(inputPassword: string, storedPassword: string): Promise<void> {
+        const isPasswordValid = await UtilsFunctions.getEncryptCompare(inputPassword, storedPassword);
+        if (!isPasswordValid) {
+            throw new HttpCustomException('El nombre de usuario o la contraseña son inválidos', StatusCodeEnums.INVALID_CREDENTIALS);
+        }
+    }
+
+    private async generateAndSaveTokens(user: User): Promise<LoginResponse> {
+        try {
+            const accessToken = await this._jwtSecurityService.generateAccessToken(user.getUuid(), user.id);
+            const refreshToken = await this._jwtSecurityService.generateRefreshToken(user.getUuid(), user.id);
+            
+            user.setRefreshToken(refreshToken);
+            await this.saveUser(user);
+
+            return new LoginResponse(accessToken, refreshToken);
+        } catch (error) {
+            this.handleTokenGenerationError(error);
+        }
+    }
+
+    private async saveUser(user: User): Promise<void> {
+        try {
+            await this._userDao.save(user);
+        } catch (error) {
+            this.handleDatabaseError(error, 'Error al guardar usuario');
+        }
+    }
+
+    private handleDatabaseError(error: unknown, message: string): never {
+        const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+        throw new HttpCustomException(`${message}: ${errorMessage}`, StatusCodeEnums.INVALID_CREDENTIALS);
+    }
+
+    private handleTokenGenerationError(error: unknown): never {
+        if (error instanceof HttpCustomException) {
+            throw error;
+        }
+        throw new HttpCustomException('El nombre de usuario o la contraseña son inválidos', StatusCodeEnums.INVALID_CREDENTIALS);
+    }
 }

@@ -18,49 +18,69 @@ export class UserService {
     ) { }
 
     async create(data: CreateUserRequest): Promise<SuccessfulResponse> {
-        if (!data.email) {
-            throw new HttpCustomException('Email is required', StatusCodeEnums.EMAIL_REQUIRED);
-        }
-        if (!data.name) {
-            throw new HttpCustomException('Name is required', StatusCodeEnums.NAME_REQUIRED);
-        }
-        if (!data.password) {
-            throw new HttpCustomException('Password is required', StatusCodeEnums.PASSWORD_REQUIRED);
-        }
+        this.validateUserData(data);
 
         try {
-            const findUser: User | null = await this._userDao.findByEmail(data.email);
-            if (findUser) {
-                throw new HttpCustomException('User already exist', StatusCodeEnums.USER_ALREADY_EXISTS);
-            }
-            const findRole: Role | null = await this._roleDao.findByName("USER");
-            if (!findRole) {
-                throw new HttpCustomException('Role not found', StatusCodeEnums.ROLE_NOT_FOUND);
-            }
+            await this.checkUserExists(data.email);
+            const role = await this.getUserRole();
 
-            const user: User = new User();
-            user.setUuid(uuidv4());
-            user.setName(data.name);
-            user.setEmail(data.email);
-            user.setPassword(await UtilsFunctions.getEncryptData(data.password));
-            user.setVerificationCode(await UtilsFunctions.generateVerificationCode());
-            user.setExpireVerificationCode(await UtilsFunctions.generateVerificationCode());
-            user.setRoleId(findRole);
-            user.setIsActive(true);
-            await this._userDao.save(user).catch(error => {
-                if (error instanceof Error) {
-                    throw new HttpCustomException(`Error creating user: ${error.message}`, StatusCodeEnums.USER_CREATE_ERROR);
-                } else {
-                    throw new HttpCustomException('Error creating user', StatusCodeEnums.USER_CREATE_ERROR);
-                }
-            });
+            const user = await this.createUserEntity(data, role);
+            await this.saveUser(user);
 
-            return new SuccessfulResponse('User created successfully');
+            return new SuccessfulResponse('Usuario creado exitosamente');
         } catch (error) {
-            if (error instanceof HttpCustomException) {
-                throw error;
-            }
-            throw new HttpCustomException('Error creating user', StatusCodeEnums.USER_CREATE_ERROR);
+            this.handleCreateUserError(error);
         }
+    }
+
+    // Métodos privados para mejorar la legibilidad y mantenibilidad
+    private validateUserData(data: CreateUserRequest): void {
+        if (!data.email) throw new HttpCustomException('El email es requerido', StatusCodeEnums.EMAIL_REQUIRED);
+        if (!data.name) throw new HttpCustomException('El nombre es requerido', StatusCodeEnums.NAME_REQUIRED);
+        if (!data.password) throw new HttpCustomException('La contraseña es requerida', StatusCodeEnums.PASSWORD_REQUIRED);
+    }
+
+    private async checkUserExists(email: string): Promise<void> {
+        const existingUser = await this._userDao.findByEmail(email);
+        if (existingUser) {
+            throw new HttpCustomException('El usuario ya existe', StatusCodeEnums.USER_ALREADY_EXISTS);
+        }
+    }
+
+    private async getUserRole(): Promise<Role> {
+        const role = await this._roleDao.findByName("USER");
+        if (!role) {
+            throw new HttpCustomException('Rol no encontrado', StatusCodeEnums.ROLE_NOT_FOUND);
+        }
+        return role;
+    }
+
+    private async createUserEntity(data: CreateUserRequest, role: Role): Promise<User> {
+        const user = new User();
+        user.setUuid(uuidv4());
+        user.setName(data.name);
+        user.setEmail(data.email);
+        user.setPassword(await UtilsFunctions.getEncryptData(data.password));
+        user.setVerificationCode(await UtilsFunctions.generateVerificationCode());
+        user.setExpireVerificationCode(await UtilsFunctions.generateVerificationCode());
+        user.setRoleId(role);
+        user.setIsActive(true);
+        return user;
+    }
+
+    private async saveUser(user: User): Promise<void> {
+        try {
+            await this._userDao.save(user);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+            throw new HttpCustomException(`Error al crear usuario: ${errorMessage}`, StatusCodeEnums.USER_CREATE_ERROR);
+        }
+    }
+
+    private handleCreateUserError(error: unknown): never {
+        if (error instanceof HttpCustomException) {
+            throw error;
+        }
+        throw new HttpCustomException('Error al crear usuario', StatusCodeEnums.USER_CREATE_ERROR);
     }
 }
