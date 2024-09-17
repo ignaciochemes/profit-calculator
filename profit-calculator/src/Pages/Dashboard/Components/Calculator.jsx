@@ -126,7 +126,7 @@ const ProfitCalculator = () => {
                 )}
                 <Row>
                     <Col md={4}>
-                        <Card className="mb-4">
+                        <Card className="shadow mb-4">
                             <Card.Body>
                                 <Card.Title>Buscar y Agregar Productos</Card.Title>
                                 <Form.Group className="mb-3">
@@ -168,7 +168,7 @@ const ProfitCalculator = () => {
                                 </Button>
                             </Card.Body>
                         </Card>
-                        <Card className="mb-4">
+                        <Card className="shadow mb-4">
                             <Card.Body>
                                 <Card.Title>Estadísticas Rápidas</Card.Title>
                                 <ListGroup variant="flush">
@@ -189,7 +189,7 @@ const ProfitCalculator = () => {
                         </Card>
                     </Col>
                     <Col md={8}>
-                        <Card className="mb-4">
+                        <Card className="shadow mb-4">
                             <Card.Body>
                                 <Card.Title>Productos Seleccionados</Card.Title>
                                 <div style={{ height: '337px', overflowY: 'auto' }}>
@@ -199,7 +199,7 @@ const ProfitCalculator = () => {
                                                 <th>Nombre</th>
                                                 <th>Cantidad</th>
                                                 <th>Costo</th>
-                                                <th>Precio de Venta</th>
+                                                <th>Precio</th>
                                                 <th>Ganancia</th>
                                                 <th>Acciones</th>
                                             </tr>
@@ -213,7 +213,12 @@ const ProfitCalculator = () => {
                                                     <td>{formatCurrencyArs(product.sellingPrice)}</td>
                                                     <td>{formatCurrencyArs(calculateProfit(product.cost, product.sellingPrice, product.quantity))}</td>
                                                     <td>
-                                                        <Button variant="danger" size="sm" onClick={() => handleRemoveProduct(product.id)}>
+                                                        <Button 
+                                                            variant="danger" 
+                                                            size="sm" 
+                                                            onClick={() => handleRemoveProduct(product.id)}
+                                                            style={{ padding: '0.1rem 0.3rem', fontSize: '0.75rem' }}
+                                                        >
                                                             Eliminar
                                                         </Button>
                                                     </td>
@@ -239,7 +244,7 @@ const ProfitCalculator = () => {
                         </Card>
                     </Col>
                 </Row>
-                <Card className="mb-4">
+                <Card className="shadow mb-4">
                     <Card.Body>
                         <Card.Title>Resumen</Card.Title>
                         <p><strong>Ganancia Total:</strong> {formatCurrencyArs(totalProfit)}</p>

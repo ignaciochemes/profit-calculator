@@ -86,118 +86,124 @@ const CreateProduct = () => {
     };
 
     return (
-        <Container className="mt-4">
-            <h1 className="mb-4">Crear nuevo producto</h1>
-            {feedback && (
-                <Alert variant={feedback.type} onClose={() => setFeedback(null)} dismissible>
-                    {feedback.message}
-                </Alert>
-            )}
-            <Row>
-                <Col md="8">
-                    <Card className="mb-4">
-                        <Card.Body>
-                            <Form onSubmit={handleSubmit}>
+        <div style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
+            <Container className="py-4">
+                <h1 className="text-center mb-4">Crear nuevo producto</h1>
+                {feedback && (
+                    <Alert variant={feedback.type} onClose={() => setFeedback(null)} dismissible>
+                        {feedback.message}
+                    </Alert>
+                )}
+                <Row>
+                    <Col md={8} className="mx-auto">
+                        <Card className="shadow mb-4">
+                            <Card.Body>
+                                <Form onSubmit={handleSubmit}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Nombre del Producto</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            name="name"
+                                            value={product.name}
+                                            onChange={handleInputChange}
+                                            required
+                                        />
+                                    </Form.Group>
+                                    <Row>
+                                        <Col md={6}>
+                                            <Form.Group className="mb-3">
+                                                <Form.Label>Costo en ARS</Form.Label>
+                                                <Form.Control
+                                                    type="number"
+                                                    name="cost"
+                                                    value={product.cost}
+                                                    onChange={handleInputChange}
+                                                    required
+                                                />
+                                            </Form.Group>
+                                        </Col>
+                                        <Col md={6}>
+                                            <Form.Group className="mb-3">
+                                                <Form.Label>Costo en USD</Form.Label>
+                                                <Form.Control
+                                                    type="number"
+                                                    step="any"
+                                                    name="costUsd"
+                                                    value={product.costUsd}
+                                                    onChange={(e) => {
+                                                        handleInputChange(e);
+                                                        handleCalculateCostInArs(e);
+                                                    }}
+                                                />
+                                                <Form.Text className="text-muted">
+                                                    Costo en ARS: {costInArs}
+                                                </Form.Text>
+                                            </Form.Group>
+                                        </Col>
+                                    </Row>
+                                    <Row>
+                                        <Col md={6}>
+                                            <Form.Group className="mb-3">
+                                                <Form.Label>Precio de venta en ARS</Form.Label>
+                                                <Form.Control
+                                                    type="number"
+                                                    step="any"
+                                                    name="sellingPrice"
+                                                    value={product.sellingPrice}
+                                                    onChange={handleInputChange}
+                                                    required
+                                                />
+                                            </Form.Group>
+                                        </Col>
+                                        <Col md={6}>
+                                            <Form.Group className="mb-3">
+                                                <Form.Label>Precio de venta en USD</Form.Label>
+                                                <Form.Control
+                                                    type="number"
+                                                    step="any"
+                                                    name="sellingPriceUsd"
+                                                    value={product.sellingPriceUsd}
+                                                    onChange={(e) => {
+                                                        handleInputChange(e);
+                                                        handleCalculateSellingPriceInArs(e);
+                                                    }}
+                                                />
+                                                <Form.Text className="text-muted">
+                                                    Precio de Venta en ARS: {sellingPriceInArs}
+                                                </Form.Text>
+                                            </Form.Group>
+                                        </Col>
+                                    </Row>
+                                    <div className="mt-auto">
+                                        <Button variant="primary" type="submit">
+                                            Crear Producto
+                                        </Button>
+                                    </div>
+                                </Form>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col md={8} className="mx-auto">
+                        <Card className="shadow">
+                            <Card.Body>
+                                <Card.Title>Calculadora de Conversión</Card.Title>
                                 <Form.Group className="mb-3">
-                                    <Form.Label>Nombre del Producto</Form.Label>
+                                    <Form.Label>Tipo de Cambio USD a ARS</Form.Label>
                                     <Form.Control
-                                        type="text"
-                                        name="name"
-                                        value={product.name}
-                                        onChange={handleInputChange}
-                                        required
+                                        type="number"
+                                        step="any"
+                                        value={usdToArsRate}
+                                        onChange={handleRateChange}
                                     />
                                 </Form.Group>
-                                <Row>
-                                    <Col md={6}>
-                                        <Form.Group className="mb-3">
-                                            <Form.Label>Costo en ARS</Form.Label>
-                                            <Form.Control
-                                                type="number"
-                                                name="cost"
-                                                value={product.cost}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                    <Col md={6}>
-                                        <Form.Group className="mb-3">
-                                            <Form.Label>Costo en USD</Form.Label>
-                                            <Form.Control
-                                                type="number"
-                                                step="any"
-                                                name="costUsd"
-                                                value={product.costUsd}
-                                                onChange={(e) => {
-                                                    handleInputChange(e);
-                                                    handleCalculateCostInArs(e);
-                                                }}
-                                            />
-                                            <Form.Text className="text-muted">
-                                                Costo en ARS: {costInArs}
-                                            </Form.Text>
-                                        </Form.Group>
-                                    </Col>
-                                </Row>
-                                <Row>
-                                    <Col md={6}>
-                                        <Form.Group className="mb-3">
-                                            <Form.Label>Precio de venta en ARS</Form.Label>
-                                            <Form.Control
-                                                type="number"
-                                                step="any"
-                                                name="sellingPrice"
-                                                value={product.sellingPrice}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                    <Col md={6}>
-                                        <Form.Group className="mb-3">
-                                            <Form.Label>Precio de venta en USD</Form.Label>
-                                            <Form.Control
-                                                type="number"
-                                                step="any"
-                                                name="sellingPriceUsd"
-                                                value={product.sellingPriceUsd}
-                                                onChange={(e) => {
-                                                    handleInputChange(e);
-                                                    handleCalculateSellingPriceInArs(e);
-                                                }}
-                                            />
-                                            <Form.Text className="text-muted">
-                                                Precio de Venta en ARS: {sellingPriceInArs}
-                                            </Form.Text>
-                                        </Form.Group>
-                                    </Col>
-                                </Row>
-                                <Button variant="primary" type="submit">
-                                    Crear Producto
-                                </Button>
-                            </Form>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md="4">
-                    <Card className="mb-4">
-                        <Card.Body>
-                            <Card.Title>Calculadora de Conversión</Card.Title>
-                            <Form.Group className="mb-3">
-                                <Form.Label>Tipo de Cambio USD a ARS</Form.Label>
-                                <Form.Control
-                                    type="number"
-                                    step="any"
-                                    value={usdToArsRate}
-                                    onChange={handleRateChange}
-                                />
-                            </Form.Group>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
-        </Container>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+            </Container>
+        </div>
     );
 };
 

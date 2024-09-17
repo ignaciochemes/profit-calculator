@@ -18,11 +18,15 @@ enum StatusCodeEnums {
     PRODUCT_UPDATE_ERROR,
     PRODUCT_DELETE_ERROR,
 
+    HISTORY_PROFIT_NOT_FOUND = 20100,
+
     USER_ALREADY_EXISTS = 30000,
     USER_CREATE_ERROR,
     USER_NOT_FOUND,
 
     ROLE_NOT_FOUND = 40000,
+
+    INTERNAL_SERVER_ERROR = 50000,
 }
 
 type StatusCodeKeys = keyof typeof StatusCodeEnums;

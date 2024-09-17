@@ -13,7 +13,7 @@ export class ProfitHistoryDao {
         await this._profitHistoryRepository.save(profitHistory);
     }
 
-    async findAll(limit: number, offset: number, userId: number): Promise<HistoryProfit[]> {
+    async findAll(userId: number,limit: number, offset: number, dateIn?: string, dateOut?: string): Promise<HistoryProfit[]> {
         const query = this._profitHistoryRepository
             .createQueryBuilder('profitHistory')
             .leftJoinAndSelect('profitHistory.profitHistoryProducts', 'profitHistoryProduct')
@@ -22,20 +22,24 @@ export class ProfitHistoryDao {
             .where('profitHistoryProduct.user_id = :userId', { userId })
             .orderBy('profitHistory.createdAt', 'DESC')
             .skip(offset)
-            .take(limit)
-            .getMany();
-        return query;
+            .take(limit);
+        if (dateIn && dateOut) {
+            query.andWhere('profitHistory.createdAt BETWEEN :dateIn AND :dateOut', { dateIn, dateOut })
+        }
+        return query.getMany();
     }
 
-    async count(userId: number): Promise<number> {
+    async count(userId: number, dateIn?: string, dateOut?: string): Promise<number> {
         const query = this._profitHistoryRepository
             .createQueryBuilder('profitHistory')
             .leftJoinAndSelect('profitHistory.profitHistoryProducts', 'profitHistoryProduct')
             .leftJoinAndSelect('profitHistoryProduct.product', 'product')
             .leftJoin('profitHistoryProduct.user', 'user')
-            .where('profitHistoryProduct.user_id = :userId', { userId })
-            .getCount();
-        return query;
+            .where('profitHistoryProduct.user_id = :userId', { userId });
+        if (dateIn && dateOut) {
+            query.andWhere('profitHistory.createdAt BETWEEN :dateIn AND :dateOut', { dateIn, dateOut })
+        }
+        return query.getCount();
     }
 
     async findOneByUuid(uuid: string): Promise<HistoryProfit> {
