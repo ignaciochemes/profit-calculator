@@ -73,7 +73,7 @@ function LoginPage() {
                         </Button>
                     </Form>
                     <div className="text-center mt-3">
-                        <a href="/register">¿No tienes una cuenta? Regístrate</a>
+                        <a href="/signup">¿No tienes una cuenta? Regístrate</a>
                     </div>
                 </Card.Body>
             </Card>
