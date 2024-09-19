@@ -11,11 +11,23 @@ const ProfitCalculator = () => {
     const [feedback, setFeedback] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [productsPerPage] = useState(6);
+    const [filteredProducts, setFilteredProducts] = useState([]);
+    const maxDisplayedProducts = 5;
 
     const handleSearchChange = useCallback((e) => {
-        setSearchTerm(e.target.value);
+        const searchValue = e.target.value.toLowerCase();
+        setSearchTerm(searchValue);
         setSelectedProduct(null);
-    }, []);
+
+        if (searchValue.length >= 2) {
+            const filtered = existingProducts
+                .filter(product => product.name.toLowerCase().includes(searchValue))
+                .slice(0, maxDisplayedProducts);
+            setFilteredProducts(filtered);
+        } else {
+            setFilteredProducts([]);
+        }
+    }, [existingProducts]);
 
     const handleSelectProduct = useCallback((product) => {
         setSelectedProduct({ ...product, quantity: 1 });
@@ -90,13 +102,16 @@ const ProfitCalculator = () => {
         const totalProducts = products.reduce((sum, product) => sum + parseInt(product.quantity), 0);
         const totalCost = products.reduce((sum, product) => sum + (parseFloat(product.cost) * parseInt(product.quantity)), 0);
         const totalRevenue = products.reduce((sum, product) => sum + (parseFloat(product.sellingPrice) * parseInt(product.quantity)), 0);
-        const averageProfit = totalProducts > 0 ? (totalRevenue - totalCost) / totalProducts : 0;
+        const totalProfit = totalRevenue - totalCost;
+        const averageProfit = totalProducts > 0 ? totalProfit / totalProducts : 0;
+        const profitPercentage = totalCost > 0 ? (totalProfit / totalCost) * 100 : 0;
 
         return {
             totalProducts,
             totalCost: formatCurrencyArs(totalCost),
             totalRevenue: formatCurrencyArs(totalRevenue),
-            averageProfit: formatCurrencyArs(averageProfit)
+            averageProfit: formatCurrencyArs(averageProfit),
+            profitPercentage: profitPercentage.toFixed(2)
         };
     }, [products]);
 
@@ -117,39 +132,42 @@ const ProfitCalculator = () => {
 
     return (
         <div style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
-            <Container className="py-4">
+            <Container fluid className="py-4">
                 <h1 className="text-center mb-4">Calculadora de Ganancias</h1>
                 {feedback && (
                     <Alert variant={feedback.type} onClose={() => setFeedback(null)} dismissible>
                         {feedback.message}
                     </Alert>
                 )}
-                <Row>
-                    <Col md={4}>
+                <Row className="g-4">
+                    <Col lg={4}>
                         <Card className="shadow mb-4">
                             <Card.Body>
                                 <Card.Title>Buscar y Agregar Productos</Card.Title>
                                 <Form.Group className="mb-3">
                                     <Form.Control
                                         type="text"
-                                        placeholder="Buscar producto por nombre"
+                                        placeholder="Buscar producto por nombre (mínimo 2 caracteres)"
                                         value={searchTerm}
                                         onChange={handleSearchChange}
                                     />
                                 </Form.Group>
-                                {searchTerm && (
+                                {filteredProducts.length > 0 && (
                                     <ListGroup className="mb-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                                        {existingProducts
-                                            .filter(product => product.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                                            .map(product => (
-                                                <ListGroup.Item
-                                                    key={product.uuid}
-                                                    action
-                                                    onClick={() => handleSelectProduct(product)}
-                                                >
-                                                    {product.name}
-                                                </ListGroup.Item>
-                                            ))}
+                                        {filteredProducts.map(product => (
+                                            <ListGroup.Item
+                                                key={product.uuid}
+                                                action
+                                                onClick={() => handleSelectProduct(product)}
+                                            >
+                                                {product.name}
+                                            </ListGroup.Item>
+                                        ))}
+                                        {filteredProducts.length === maxDisplayedProducts && (
+                                            <ListGroup.Item disabled>
+                                                Mostrando los primeros {maxDisplayedProducts} resultados. Refine su búsqueda para ver más.
+                                            </ListGroup.Item>
+                                        )}
                                     </ListGroup>
                                 )}
                                 {selectedProduct && (
@@ -168,7 +186,7 @@ const ProfitCalculator = () => {
                                 </Button>
                             </Card.Body>
                         </Card>
-                        <Card className="shadow mb-4">
+                        <Card className="shadow">
                             <Card.Body>
                                 <Card.Title>Estadísticas Rápidas</Card.Title>
                                 <ListGroup variant="flush">
@@ -184,16 +202,19 @@ const ProfitCalculator = () => {
                                     <ListGroup.Item>
                                         <strong>Ganancia Promedio por Producto:</strong> {quickStats.averageProfit}
                                     </ListGroup.Item>
+                                    <ListGroup.Item>
+                                        <strong>Porcentaje de Ganancia:</strong> {quickStats.profitPercentage}%
+                                    </ListGroup.Item>
                                 </ListGroup>
                             </Card.Body>
                         </Card>
                     </Col>
-                    <Col md={8}>
-                        <Card className="shadow mb-4">
+                    <Col lg={8}>
+                        <Card className="shadow h-100">
                             <Card.Body>
                                 <Card.Title>Productos Seleccionados</Card.Title>
-                                <div style={{ height: '337px', overflowY: 'auto' }}>
-                                    <Table hover size="sm">
+                                <div style={{ height: '400px', overflowY: 'auto' }}>
+                                    <Table hover responsive>
                                         <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f8f9fa' }}>
                                             <tr>
                                                 <th>Nombre</th>
@@ -213,21 +234,14 @@ const ProfitCalculator = () => {
                                                     <td>{formatCurrencyArs(product.sellingPrice)}</td>
                                                     <td>{formatCurrencyArs(calculateProfit(product.cost, product.sellingPrice, product.quantity))}</td>
                                                     <td>
-                                                        <Button 
-                                                            variant="danger" 
-                                                            size="sm" 
+                                                        <Button
+                                                            variant="danger"
+                                                            size="sm"
                                                             onClick={() => handleRemoveProduct(product.id)}
-                                                            style={{ padding: '0.1rem 0.3rem', fontSize: '0.75rem' }}
                                                         >
                                                             Eliminar
                                                         </Button>
                                                     </td>
-                                                </tr>
-                                            ))}
-                                            {/* Filas vacías para mantener la altura fija */}
-                                            {[...Array(Math.max(0, productsPerPage - currentProducts.length))].map((_, index) => (
-                                                <tr key={`empty-${index}`}>
-                                                    <td colSpan="6">&nbsp;</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -244,15 +258,51 @@ const ProfitCalculator = () => {
                         </Card>
                     </Col>
                 </Row>
-                <Card className="shadow mb-4">
-                    <Card.Body>
-                        <Card.Title>Resumen</Card.Title>
-                        <p><strong>Ganancia Total:</strong> {formatCurrencyArs(totalProfit)}</p>
-                        <Button variant="success" onClick={handleSave} disabled={products.length === 0}>
-                            Guardar Cálculo de Ganancia
-                        </Button>
-                    </Card.Body>
-                </Card>
+                <Row className="mt-4 g-4">
+                    <Col md={6} lg={4}>
+                        <Card className="shadow h-100">
+                            <Card.Body>
+                                <Card.Title>Resumen</Card.Title>
+                                <p><strong>Ganancia Total:</strong> {formatCurrencyArs(totalProfit)}</p>
+                                <p><strong>Valor Total de los Productos:</strong> {quickStats.totalRevenue}</p>
+                                <p><strong>Porcentaje de Ganancia:</strong> {quickStats.profitPercentage}%</p>
+                                <Button variant="success" onClick={handleSave} disabled={products.length === 0}>
+                                    Guardar Cálculo de Ganancia
+                                </Button>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                    <Col md={6} lg={8}>
+                        <Card className="shadow h-100">
+                            <Card.Body>
+                                <Card.Title>Cómo Funciona la Calculadora</Card.Title>
+                                <Alert variant="info">
+                                    <Alert.Heading>Calculadora de Ganancias</Alert.Heading>
+                                    <p>
+                                        Esta herramienta le permite calcular rápidamente las ganancias de sus productos:
+                                    </p>
+                                    <ol>
+                                        <li>Busque y seleccione productos de su inventario.</li>
+                                        <li>Ajuste las cantidades según sea necesario.</li>
+                                        <li>Vea las estadísticas actualizadas en tiempo real.</li>
+                                        <li>Guarde los cálculos para futuras referencias.</li>
+                                    </ol>
+                                </Alert>
+                                <Alert variant="warning">
+                                    <Alert.Heading>Consejos de Uso</Alert.Heading>
+                                    <p>
+                                        Para obtener los mejores resultados:
+                                    </p>
+                                    <ul>
+                                        <li>Mantenga actualizados los precios de costo y venta.</li>
+                                        <li>Revise regularmente sus márgenes de ganancia.</li>
+                                        <li>Utilice la función de guardado para hacer seguimiento a lo largo del tiempo.</li>
+                                    </ul>
+                                </Alert>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
             </Container>
         </div>
     );

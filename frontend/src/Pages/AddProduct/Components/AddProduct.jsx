@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Container, Row, Col, Card, Alert } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col, Card, Toast, OverlayTrigger, Tooltip } from 'react-bootstrap';
 
 const CreateProduct = () => {
     const [product, setProduct] = useState({
@@ -8,28 +8,54 @@ const CreateProduct = () => {
         cost: '',
         costUsd: '',
         sellingPrice: '',
-        sellingPriceUsd: ''
+        sellingPriceUsd: '',
+        applyIva: false,
+        ivaPercentage: ''
     });
     const [usdToArsRate, setUsdToArsRate] = useState(1300);
     const [costInArs, setCostInArs] = useState('');
     const [sellingPriceInArs, setSellingPriceInArs] = useState('');
-    const [feedback, setFeedback] = useState(null);
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
 
     const handleInputChange = (e) => {
-        setProduct({ ...product, [e.target.name]: e.target.value });
+        const { name, value, type, checked } = e.target;
+        setProduct(prevProduct => ({
+            ...prevProduct,
+            [name]: type === 'checkbox' ? checked : value
+        }));
     };
 
-    const calculateCostInArs = (costUsd) => {
-        return (costUsd * usdToArsRate).toFixed(2);
+    const handleIvaSwitch = (checked) => {
+        if (product.sellingPrice || product.sellingPriceUsd) {
+            setProduct(prevProduct => ({
+                ...prevProduct,
+                applyIva: checked,
+                ivaPercentage: checked ? prevProduct.ivaPercentage || '21' : '' // Default to 21% if not set
+            }));
+        }
     };
 
-    const calculateSellingPriceInArs = (sellingPriceUsd) => {
-        return (sellingPriceUsd * usdToArsRate).toFixed(2);
+    const calculateFinalSellingPrice = () => {
+        let basePrice = parseFloat(product.sellingPrice) || 0;
+        if (product.applyIva && product.ivaPercentage) {
+            const ivaAmount = basePrice * (parseFloat(product.ivaPercentage) / 100);
+            basePrice += ivaAmount;
+        }
+        return basePrice.toFixed(2);
     };
 
     const handleRateChange = (e) => {
         const newRate = e.target.value;
         setUsdToArsRate(newRate);
+    };
+
+    const calculateCostInArs = (costUsd) => {
+        return (parseFloat(costUsd) * usdToArsRate).toFixed(2);
+    };
+
+    const calculateSellingPriceInArs = (sellingPriceUsd) => {
+        return (parseFloat(sellingPriceUsd) * usdToArsRate).toFixed(2);
     };
 
     const handleCalculateSellingPriceInArs = (e) => {
@@ -55,8 +81,10 @@ const CreateProduct = () => {
             isActive: product.isActive,
             cost: Number(product.cost),
             costUsd: Number(product.costUsd),
-            sellingPrice: Number(product.sellingPrice),
-            sellingPriceUsd: Number(product.sellingPriceUsd)
+            sellingPrice: Number(calculateFinalSellingPrice()),
+            sellingPriceUsd: Number(product.sellingPriceUsd),
+            applyIva: product.applyIva,
+            ivaPercentage: product.applyIva ? Number(product.ivaPercentage) : null
         };
 
         fetch('http://localhost:33000/api/v1/carta-online/product', {
@@ -74,26 +102,29 @@ const CreateProduct = () => {
                     return;
                 }
                 console.log('Product created successfully:', data);
-                setFeedback({ type: 'success', message: 'Producto creado exitosamente!' });
-                setProduct({ name: '', cost: '', costUsd: '', sellingPrice: '', sellingPriceUsd: '' });
+                setToastMessage('Producto creado exitosamente!');
+                setShowToast(true);
+                setProduct({ name: '', cost: '', costUsd: '', sellingPrice: '', sellingPriceUsd: '', applyIva: false, ivaPercentage: '' });
                 setCostInArs('');
                 setSellingPriceInArs('');
             })
             .catch((error) => {
                 console.error('Error:', error);
-                setFeedback({ type: 'danger', message: 'Error al crear el producto. Por favor, intente nuevamente.' });
+                setToastMessage('Error al crear el producto. Por favor, intente nuevamente.');
+                setShowToast(true);
             });
     };
+
+    const ivaTooltip = (
+        <Tooltip id="iva-tooltip">
+            Para habilitar el IVA, primero ingrese un precio de venta en ARS o USD.
+        </Tooltip>
+    );
 
     return (
         <div style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
             <Container className="py-4">
                 <h1 className="text-center mb-4">Crear nuevo producto</h1>
-                {feedback && (
-                    <Alert variant={feedback.type} onClose={() => setFeedback(null)} dismissible>
-                        {feedback.message}
-                    </Alert>
-                )}
                 <Row>
                     <Col md={8} className="mx-auto">
                         <Card className="shadow mb-4">
@@ -174,6 +205,44 @@ const CreateProduct = () => {
                                             </Form.Group>
                                         </Col>
                                     </Row>
+                                    <Row className="mb-3">
+                                        <Col md={6}>
+                                            <OverlayTrigger
+                                                placement="top"
+                                                overlay={ivaTooltip}
+                                                trigger={['hover', 'focus']}
+                                            >
+                                                <div>
+                                                    <Form.Check
+                                                        type="switch"
+                                                        id="iva-switch"
+                                                        label="Aplicar IVA"
+                                                        checked={product.applyIva}
+                                                        onChange={(e) => handleIvaSwitch(e.target.checked)}
+                                                        disabled={!product.sellingPrice && !product.sellingPriceUsd}
+                                                    />
+                                                </div>
+                                            </OverlayTrigger>
+                                        </Col>
+                                        {product.applyIva && (
+                                            <Col md={6}>
+                                                <Form.Group>
+                                                    <Form.Label>Porcentaje de IVA</Form.Label>
+                                                    <Form.Control
+                                                        type="number"
+                                                        step="0.01"
+                                                        name="ivaPercentage"
+                                                        value={product.ivaPercentage}
+                                                        onChange={handleInputChange}
+                                                        required
+                                                    />
+                                                </Form.Group>
+                                            </Col>
+                                        )}
+                                    </Row>
+                                    {product.applyIva && product.sellingPrice && (
+                                        <p>Precio final con IVA: {calculateFinalSellingPrice()} ARS</p>
+                                    )}
                                     <div className="mt-auto">
                                         <Button variant="primary" type="submit">
                                             Crear Producto
@@ -203,6 +272,24 @@ const CreateProduct = () => {
                     </Col>
                 </Row>
             </Container>
+
+            <Toast
+                show={showToast}
+                onClose={() => setShowToast(false)}
+                delay={3000}
+                autohide
+                style={{
+                    position: 'fixed',
+                    top: 20,
+                    right: 20,
+                    minWidth: '250px'
+                }}
+            >
+                <Toast.Header>
+                    <strong className="me-auto">Notificación</strong>
+                </Toast.Header>
+                <Toast.Body>{toastMessage}</Toast.Body>
+            </Toast>
         </div>
     );
 };
