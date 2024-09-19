@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Form, Button, ListGroup, Container, Row, Col, Card, Alert, Pagination, Table } from 'react-bootstrap';
-import { formatCurrencyArs, formatCurrencyUsd } from '../../../Utils/CurrencyFormatter';
+import { formatCurrencyArs } from '../../../Utils/CurrencyFormatter';
 import { findAllProductsWebService, saveProfitHistoryWebService } from '../../../Webservices/DahsboardWebServices';
 
 const ProfitCalculator = () => {

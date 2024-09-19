@@ -69,6 +69,7 @@ const Products = () => {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionStorage.getItem('refreshToken')}`
             },
             body: JSON.stringify(editProduct),
         })
