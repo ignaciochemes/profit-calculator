@@ -82,9 +82,7 @@ const CreateProduct = () => {
             cost: Number(product.cost),
             costUsd: Number(product.costUsd),
             sellingPrice: Number(calculateFinalSellingPrice()),
-            sellingPriceUsd: Number(product.sellingPriceUsd),
-            applyIva: product.applyIva,
-            ivaPercentage: product.applyIva ? Number(product.ivaPercentage) : null
+            sellingPriceUsd: Number(product.sellingPriceUsd)
         };
 
         fetch('http://localhost:33000/api/v1/carta-online/product', {
