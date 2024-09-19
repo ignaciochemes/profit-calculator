@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import DashBoardContainer from "./Pages/Dashboard/Containers/DashBoardContainer";
 import NotFoundPage from "./Pages/NotFound/NotFoundPage";
@@ -8,10 +8,14 @@ import ProfitContainer from "./Pages/Profit/ProfitContainer";
 import LoginContainer from "./Pages/Auth/LoginContainer";
 import RegisterContainer from "./Pages/Auth/RegisterContainer";
 import CalculatorContainer from "./Pages/Calculator/Containers/CalculatorContainer";
+import { Spinner } from "react-bootstrap";
 
 function Router() {
+    const [isLoading, setIsLoading] = useState(true);
+
     useEffect(() => {
         const verifyToken = async () => {
+            setIsLoading(true);
             const token = sessionStorage.getItem('refreshToken');
             if (token) {
                 try {
@@ -36,21 +40,33 @@ function Router() {
                     window.location.href = '/login';
                 }
             }
+            setIsLoading(false);
         };
         verifyToken();
     }, []);
 
     return (
-        <Routes>
-            <Route path="/" element={<DashBoardContainer />} />
-            <Route path="/calculator" element={<CalculatorContainer />} />
-            <Route path="/products" element={<ProductContainer />} />
-            <Route path="/addproduct" element={<AddProductContainer />} />
-            <Route path="/profit" element={<ProfitContainer />} />
-            <Route path="/signin" element={<LoginContainer />} />
-            <Route path="/signup" element={<RegisterContainer />} />
-            <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+        <div>
+            {isLoading ? (
+                <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+                    <Spinner animation="border" role="status" style={{ width: '3rem', height: '3rem' }}>
+                        <span className="visually-hidden">Cargando...</span>
+                    </Spinner>
+                </div>
+            ) : (
+                <Routes>
+                    <Route path="/" element={<DashBoardContainer />} />
+                    <Route path="/" element={<DashBoardContainer />} />
+                    <Route path="/calculator" element={<CalculatorContainer />} />
+                    <Route path="/products" element={<ProductContainer />} />
+                    <Route path="/addproduct" element={<AddProductContainer />} />
+                    <Route path="/profit" element={<ProfitContainer />} />
+                    <Route path="/signin" element={<LoginContainer />} />
+                    <Route path="/signup" element={<RegisterContainer />} />
+                    <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+            )}
+        </div>
     )
 }
 
