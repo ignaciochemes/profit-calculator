@@ -7,6 +7,7 @@ import HttpCustomException from "src/Exceptions/HttpCustomException";
 import { StatusCodeEnums } from "src/Enums/StatusCodeEnums";
 import LoginResponse from "src/Models/Response/AuthController/LoginResponse";
 import { User } from "src/Models/Entities/User/UserEntity";
+import VerifyTokenResponse from "src/Models/Response/AuthController/VerifyTokenResponse";
 
 @Injectable()
 export class AuthService {
@@ -22,6 +23,19 @@ export class AuthService {
         await this.validatePassword(data.password, user.getPassword());
 
         return await this.generateAndSaveTokens(user);
+    }
+
+    async verify(data: string): Promise<VerifyTokenResponse> {
+        if (!data) {
+            throw new HttpCustomException('Token no proporcionado', StatusCodeEnums.INVALID_CREDENTIALS);
+        }
+        const token = data.split(' ')[1];
+        try {
+            await this._jwtSecurityService.verifyRefreshToken(token);
+            return new VerifyTokenResponse(true);
+        } catch (error) {
+            return new VerifyTokenResponse(false);
+        }
     }
 
     private validateLoginData(data: LoginRequest): void {
@@ -53,7 +67,7 @@ export class AuthService {
         try {
             const accessToken = await this._jwtSecurityService.generateAccessToken(user.getUuid(), user.id);
             const refreshToken = await this._jwtSecurityService.generateRefreshToken(user.getUuid(), user.id);
-            
+
             user.setRefreshToken(refreshToken);
             await this.saveUser(user);
 
