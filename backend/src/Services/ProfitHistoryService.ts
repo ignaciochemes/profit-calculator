@@ -107,10 +107,24 @@ export class ProfitHistoryService {
             throw new HttpCustomException('User not found', StatusCodeEnums.USER_NOT_FOUND);
         }
         try {
-            const profitHistories: HistoryProfit[] = await this._profitHistoryDao.findAll(query.limit, query.offset, findUser.id);
-            const total: number = await this._profitHistoryDao.count(findUser.id);
+            let dateIn: string | undefined;
+            let dateOut: string | undefined;
+            if (query.date) {
+                const sqlDate = new Date(query.date).toISOString();
+                dateIn = sqlDate;
+                const nextDay = new Date(sqlDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                nextDay.setSeconds(nextDay.getSeconds() - 1);
+                dateOut = nextDay.toISOString();
+
+            }
+            const profitHistories: HistoryProfit[] = await this._profitHistoryDao.findAll(findUser.id, query.limit, query.offset, dateIn, dateOut);
+            if (profitHistories.length === 0) {
+                throw new HttpCustomException('No profit histories found for the user', StatusCodeEnums.HISTORY_PROFIT_NOT_FOUND);
+            }
+            const total: number = await this._profitHistoryDao.count(findUser.id, dateIn, dateOut);
             if (total === 0) {
-                throw new Error('No profit histories found for the user');
+                throw new HttpCustomException('No profit histories found for the user', StatusCodeEnums.HISTORY_PROFIT_NOT_FOUND);
             }
             const totalPages: number = Math.ceil(total / query.limit);
             const currentPage: number = Math.ceil((query.offset / query.limit) + 1);
@@ -120,13 +134,11 @@ export class ProfitHistoryService {
                 currentPage,
                 total
             );
-
-
         } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Error finding profit histories: ${error.message}`);
+            if (error instanceof HttpCustomException) {
+                throw error;
             } else {
-                throw new Error('Error finding profit histories');
+                throw new HttpCustomException('Error finding profit histories', StatusCodeEnums.INTERNAL_SERVER_ERROR);
             }
         }
     }

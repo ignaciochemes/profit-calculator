@@ -1,5 +1,5 @@
 import { Transform } from "class-transformer";
-import { IsNumber, IsOptional, Max, Min } from "class-validator";
+import { IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
 import { QUERY_MAX_LIMIT, QUERY_MIN_OFFSET } from "src/Constants/GenericConstants";
 
 export default class FindAllQueryProfitHistoryRequest {
@@ -15,4 +15,8 @@ export default class FindAllQueryProfitHistoryRequest {
     @IsNumber()
     @Min(QUERY_MIN_OFFSET)
     public offset = 0;
+
+    @IsOptional()
+    @IsString()
+    public date: string;
 }

@@ -83,7 +83,6 @@ export class ProductService {
         }
     }
 
-    // Métodos privados de validación
     private validateCreateData(data: CreateProductRequest, userUuid: string): void {
         if (!data) throw new HttpCustomException('Se requieren datos', StatusCodeEnums.DATA_REQUIRED);
         if (!data.name) throw new HttpCustomException('El nombre es requerido', StatusCodeEnums.NAME_REQUIRED);
