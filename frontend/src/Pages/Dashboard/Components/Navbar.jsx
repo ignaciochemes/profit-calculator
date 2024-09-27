@@ -13,6 +13,7 @@ function NavBar() {
                         <Nav.Link href="/addproduct">Agregar Producto</Nav.Link>
                         <Nav.Link href="/products">Productos</Nav.Link>
                         <Nav.Link href="/profit">Profit</Nav.Link>
+                        <Nav.Link href="/configuration">Configuración</Nav.Link>
                     </Nav>
                 </Navbar.Collapse>
             </Container>

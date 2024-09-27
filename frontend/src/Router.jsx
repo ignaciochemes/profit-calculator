@@ -19,7 +19,7 @@ function Router() {
             const token = sessionStorage.getItem('refreshToken');
             if (token) {
                 try {
-                    const response = await fetch('http://localhost:33000/api/v1/carta-online/auth/token/verify', {
+                    const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/token/verify`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

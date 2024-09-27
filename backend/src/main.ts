@@ -20,7 +20,7 @@ async function bootstrap() {
 
     app.use(BodyParser.json())
     app.use(BodyParser.urlencoded({ extended: true }))
-    app.setGlobalPrefix('api/v1/carta-online');
+    app.setGlobalPrefix('api/v1/profit-calculator');
     app.enableCors();
 
     await app.listen(configService.get<string>('PORT'));

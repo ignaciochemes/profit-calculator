@@ -17,7 +17,7 @@ const Products = () => {
 
     const fetchProducts = async () => {
         try {
-            const response = await fetch('http://localhost:33000/api/v1/carta-online/product/find/all', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/product/find/all`, {
                 headers: {
                     'Authorization': `Bearer ${sessionStorage.getItem('refreshToken')}`
                 }
@@ -38,12 +38,10 @@ const Products = () => {
         product.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Get current products
     const indexOfLastProduct = currentPage * productsPerPage;
     const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
     const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
 
-    // Change page
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
     const handleEditClick = (product) => {
@@ -65,7 +63,7 @@ const Products = () => {
             sellingPriceUsd: Number(selectedProduct.sellingPriceUsd)
         };
 
-        fetch(`http://localhost:33000/api/v1/carta-online/product/update/${selectedProduct.uuid}`, {
+        fetch(`${import.meta.env.VITE_API_URL}/product/update/${selectedProduct.uuid}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -86,7 +84,7 @@ const Products = () => {
     };
 
     const handleDeleteProduct = () => {
-        fetch(`http://localhost:33000/api/v1/carta-online/product/delete/${selectedProduct.uuid}`, {
+        fetch(`${import.meta.env.VITE_API_URL}/product/delete/${selectedProduct.uuid}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -165,8 +163,6 @@ const Products = () => {
                         </Pagination>
                     </Card.Body>
                 </Card>
-
-                {/* Modal para editar el producto */}
                 {selectedProduct && (
                     <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
                         <Modal.Header closeButton>

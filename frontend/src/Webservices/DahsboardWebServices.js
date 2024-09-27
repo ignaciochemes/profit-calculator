@@ -1,6 +1,6 @@
 export const findAllProductsWebService = async (refreshToken) => {
     try {
-        const response = await fetch('http://localhost:33000/api/v1/carta-online/product/find/all', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/product/find/all`, {
             headers: {
                 'Authorization': `Bearer ${refreshToken}`
             }
@@ -19,7 +19,7 @@ export const findAllProductsWebService = async (refreshToken) => {
 
 export const saveProfitHistoryWebService = async (data, refreshToken) => {
     try {
-        const response = await fetch('http://localhost:33000/api/v1/carta-online/profit-history', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/profit-history`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
