@@ -10,6 +10,7 @@ const Products = () => {
     const [feedback, setFeedback] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [productsPerPage] = useState(10);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         fetchProducts();
@@ -24,6 +25,12 @@ const Products = () => {
             });
             const data = await response.json();
             if (data?.statusCode === 401) {
+                window.location.href = '/signin';
+                return;
+            }
+            if (data?.statusCode === 30002) {
+                sessionStorage.removeItem('refreshToken');
+                sessionStorage.removeItem('accessToken');
                 window.location.href = '/signin';
                 return;
             }

@@ -27,12 +27,17 @@ function History() {
                 }
             });
             const data = await response.json();
-            
             if (data?.statusCode === 401) {
                 window.location.href = '/signin';
                 return;
             }
-            
+            if (data?.statusCode === 30002) {
+                sessionStorage.removeItem('refreshToken');
+                sessionStorage.removeItem('accessToken');
+                window.location.href = '/signin';
+                return;
+            }
+
             if (data?.statusCode === 20100 || (Array.isArray(data.result.profitHistory) && data.result.profitHistory.length === 0)) {
                 setError('No se encontraron registros para la fecha seleccionada.');
                 setHistory([]);
