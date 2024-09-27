@@ -37,14 +37,17 @@ Antes de comenzar, asegúrate de tener instalado:
 2. Navega al directorio del proyecto:
    ```
    cd profit-calculator
+   cd frontend
+   cd backend
    ```
 
 3. Instala las dependencias:
    ```
-   npm install
+   npm install (frontend)
+   npm install (backend)
    ```
 
-## Configuración
+## Configuración (frontend)
 
 1. Crea un archivo `.env` en la raíz del proyecto y configura las variables de entorno necesarias:
    ```
@@ -53,12 +56,12 @@ Antes de comenzar, asegúrate de tener instalado:
 
 2. Ajusta la URL de la API en el archivo de configuración si es necesario.
 
-## Uso
+## Uso (frontend)
 
 Para iniciar la aplicación en modo de desarrollo:
 
 ```
-npm start
+npm run local (frontend)
 ```
 
 La aplicación estará disponible en `http://localhost:5173`.
@@ -73,6 +76,9 @@ La aplicación estará disponible en `http://localhost:5173`.
 ## API y Backend
 
 La aplicación se comunica con un backend a través de una API RESTful. Asegúrate de que el servidor backend esté en funcionamiento y accesible en la URL configurada.
+
+## Configuración (backend)
+Documentacion del backend en backend/readme.md
 
 ## Contribución
 
