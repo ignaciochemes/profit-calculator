@@ -7,7 +7,6 @@ function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -28,7 +27,7 @@ function LoginPage() {
             if (response.ok && data.result) {
                 localStorage.setItem('accessToken', data.result.accessToken);
                 sessionStorage.setItem('refreshToken', data.result.refreshToken);
-                navigate('/');
+                window.location.href = '/';
             } else {
                 setError(data.message || 'Error al iniciar sesión. Por favor, verifica tus credenciales.');
             }

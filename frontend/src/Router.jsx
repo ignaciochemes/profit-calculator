@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import DashBoardContainer from "./Pages/Dashboard/Containers/DashBoardContainer";
 import NotFoundPage from "./Pages/NotFound/NotFoundPage";
 import AddProductContainer from "./Pages/AddProduct/AddProductContainer";
@@ -12,6 +12,7 @@ import { Spinner } from "react-bootstrap";
 
 function Router() {
     const [isLoading, setIsLoading] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
         const verifyToken = async () => {
@@ -28,46 +29,52 @@ function Router() {
                     });
                     if (response.ok) {
                         const data = await response.json();
-                        if (data.result.verify !== true) {
-                            window.location.href = '/login';
-                        }
+                        setIsAuthenticated(data.result.verify === true);
                     } else {
-                        console.error('Error en la verificación del token');
-                        window.location.href = '/login';
+                        setIsAuthenticated(false);
                     }
                 } catch (error) {
                     console.error('Error al verificar el token:', error);
-                    window.location.href = '/login';
+                    setIsAuthenticated(false);
                 }
+            } else {
+                setIsAuthenticated(false);
             }
             setIsLoading(false);
         };
         verifyToken();
     }, []);
 
+    if (isLoading) {
+        return (
+            <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+                <Spinner animation="border" role="status" style={{ width: '3rem', height: '3rem' }}>
+                    <span className="visually-hidden">Cargando...</span>
+                </Spinner>
+            </div>
+        );
+    }
+
     return (
-        <div>
-            {isLoading ? (
-                <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-                    <Spinner animation="border" role="status" style={{ width: '3rem', height: '3rem' }}>
-                        <span className="visually-hidden">Cargando...</span>
-                    </Spinner>
-                </div>
-            ) : (
-                <Routes>
-                    <Route path="/" element={<DashBoardContainer />} />
+        <Routes>
+            {isAuthenticated ? (
+                <>
                     <Route path="/" element={<DashBoardContainer />} />
                     <Route path="/calculator" element={<CalculatorContainer />} />
                     <Route path="/products" element={<ProductContainer />} />
                     <Route path="/addproduct" element={<AddProductContainer />} />
                     <Route path="/profit" element={<ProfitContainer />} />
+                    <Route path="*" element={<NotFoundPage />} />
+                </>
+            ) : (
+                <>
                     <Route path="/signin" element={<LoginContainer />} />
                     <Route path="/signup" element={<RegisterContainer />} />
-                    <Route path="*" element={<NotFoundPage />} />
-                </Routes>
+                    <Route path="*" element={<Navigate to="/signin" replace />} />
+                </>
             )}
-        </div>
-    )
+        </Routes>
+    );
 }
 
 export default Router;

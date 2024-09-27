@@ -5,69 +5,107 @@
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+  <p align="center">Una aplicación de backend progresiva <a href="http://nodejs.org" target="_blank">Node.js</a> construida con Nest.js para la gestión de productos y cálculo de beneficios.</p>
     <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## Descripción
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Profit Calculator Backend es una aplicación robusta diseñada para gestionar productos, calcular beneficios y manejar autenticación de usuarios. Utiliza Nest.js como framework principal, TypeORM para la gestión de base de datos, y Docker para facilitar el despliegue y desarrollo.
 
-## Installation
+## Características Principales
+
+- Gestión de productos (CRUD)
+- Cálculo de beneficios
+- Autenticación de usuarios con JWT
+- Migraciones de base de datos con TypeORM
+- Dockerización para fácil despliegue
+
+## Instalación
 
 ```bash
 $ npm install
 ```
 
-## Running the app
+## Configuración de la Base de Datos
+
+Este proyecto utiliza Docker Compose para configurar y ejecutar MariaDB. Para iniciar la base de datos:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+$ docker-compose up -d
 ```
 
-## Test
+Este comando iniciará un contenedor de MariaDB en el puerto 3307.
+
+## Migraciones
+
+Para generar y ejecutar migraciones, utiliza los siguientes comandos:
 
 ```bash
-# unit tests
+# Crear una nueva migración
+$ npm run migration:create -- nombre_de_la_migracion
+
+# Ejecutar migraciones pendientes
+$ npm run migration:run
+
+# Revertir la última migración
+$ npm run migration:revert
+
+# Mostrar migraciones
+$ npm run migration:show
+```
+
+## Ejecutando la aplicación
+
+```bash
+# desarrollo
+$ npm run start
+
+# modo watch
+$ npm run start:dev
+
+# modo producción
+$ npm run start:prod
+
+# modo local (con configuración específica)
+$ npm run start:local
+```
+
+## Pruebas
+
+```bash
+# pruebas unitarias
 $ npm run test
 
-# e2e tests
+# pruebas e2e
 $ npm run test:e2e
 
-# test coverage
+# cobertura de pruebas
 $ npm run test:cov
 ```
 
-## Support
+## Uso de la Aplicación
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+1. Asegúrate de que la base de datos esté en funcionamiento (usando Docker Compose).
+2. Ejecuta las migraciones para configurar la estructura de la base de datos.
+3. Inicia la aplicación en el modo deseado (desarrollo, producción o local).
 
-## Stay in touch
+## Configuración de Entorno
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Asegúrate de configurar las variables de entorno necesarias. Puedes crear un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
-## License
+```
+DB_HOST=localhost
+DB_PORT=3307
+DB_USERNAME=profit_calculator
+DB_PASSWORD=profit_calculator
+DB_DATABASE=profit_calculator
+JWT_SECRET=tu_secreto_jwt
+```
+
+## Contribución
+
+Las contribuciones son bienvenidas. Por favor, asegúrate de actualizar las pruebas según corresponda.
+
+## Licencia
 
 Nest is [MIT licensed](LICENSE).
