@@ -15,7 +15,7 @@ function LoginPage() {
         setError('');
 
         try {
-            const response = await fetch('http://localhost:33000/api/v1/carta-online/auth/signin', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/signin`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

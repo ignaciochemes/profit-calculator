@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Container, Card, Pagination, Alert, Spinner, Form, Row, Col } from 'react-bootstrap';
-import { formatCurrencyArs } from '../../../Utils/CurrencyFormatter'; // Asumiendo que tienes esta utilidad
+import { formatCurrencyArs } from '../../../Utils/CurrencyFormatter';
 
-const API_BASE_URL = 'http://localhost:33000/api/v1/carta-online';
 const PAGE_SIZE = 5;
 
 function History() {
@@ -16,7 +15,7 @@ function History() {
     const fetchHistory = useCallback(async () => {
         setIsLoading(true);
         setError(null);
-        const url = new URL(`${API_BASE_URL}/profit-history/find/all/`);
+        const url = new URL(`${import.meta.env.VITE_API_URL}/profit-history/find/all/`);
         url.searchParams.append('limit', PAGE_SIZE);
         url.searchParams.append('offset', (currentPage - 1) * PAGE_SIZE);
         if (dateFilter) url.searchParams.append('date', dateFilter);

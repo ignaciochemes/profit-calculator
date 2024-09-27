@@ -29,7 +29,7 @@ function Register() {
         }
 
         try {
-            const response = await fetch('http://localhost:33000/api/v1/carta-online/user', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/user`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ function Register() {
             const data = await response.json();
 
             if (response.ok) {
-                navigate('/login'); // Redirige al usuario a la página de inicio de sesión
+                navigate('/login');
             } else {
                 setError(data.message || 'Error al registrarse');
             }

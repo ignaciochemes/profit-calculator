@@ -31,7 +31,7 @@ const CreateProduct = () => {
             setProduct(prevProduct => ({
                 ...prevProduct,
                 applyIva: checked,
-                ivaPercentage: checked ? prevProduct.ivaPercentage || '21' : '' // Default to 21% if not set
+                ivaPercentage: checked ? prevProduct.ivaPercentage || '21' : ''
             }));
         }
     };
@@ -85,7 +85,7 @@ const CreateProduct = () => {
             sellingPriceUsd: Number(product.sellingPriceUsd)
         };
 
-        fetch('http://localhost:33000/api/v1/carta-online/product', {
+        fetch(`${import.meta.env.VITE_API_URL}/product`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
