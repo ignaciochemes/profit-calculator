@@ -6,7 +6,6 @@ import { Product } from "src/Models/Entities/Product/ProductEntity";
 import CreateProfitHistoryRequest from "src/Models/Request/ProfitHistoryController/CreateProfitHistoryRequest";
 import SuccessfulResponse from "src/Models/Response/SuccessfulResponse";
 import FindAllProfitHistoryResponse from "src/Models/Response/ProfitHistoryController/FinAllProfitHistoryResponse";
-import CalculateProfitUniqueResponse from "src/Models/Response/ProfitHistoryController/CalculateProfitUniqueResponse";
 import { HistoryProfit } from "src/Models/Entities/ProfitHistory/ProfitHistoryEntity";
 import { ProfitHistoryProduct } from "src/Models/Entities/ProfitHistory/ProfitHistoryProductEntity";
 import { ProfitHistoryProductDao } from "src/Daos/ProfitHistoryProductDao";

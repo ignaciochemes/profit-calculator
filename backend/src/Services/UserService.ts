@@ -33,7 +33,6 @@ export class UserService {
         }
     }
 
-    // Métodos privados para mejorar la legibilidad y mantenibilidad
     private validateUserData(data: CreateUserRequest): void {
         if (!data.email) throw new HttpCustomException('El email es requerido', StatusCodeEnums.EMAIL_REQUIRED);
         if (!data.name) throw new HttpCustomException('El nombre es requerido', StatusCodeEnums.NAME_REQUIRED);
